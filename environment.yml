@@ -1,0 +1,11 @@
+name: UI-Evaluation-Dashboard
+channels:
+  - defaults
+  - pytorch
+dependencies:
+  - pytorch::pytorch
+  - torchvision
+  - torchaudio
+  - numpy
+  - pillow
+  - scikit-learn
