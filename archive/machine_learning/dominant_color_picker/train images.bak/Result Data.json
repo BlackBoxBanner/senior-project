@@ -1,0 +1,34 @@
+[
+  {
+    "name": "Screenshot 2568-01-03 at 18.30.33.png",
+    "color": {
+      "primary": "#282334",
+      "secondary": "#282332",
+      "accent": "#633ed4"
+    }
+  },
+  {
+    "name": "Screenshot 2568-01-03 at 18.33.58.png",
+    "color": {
+      "primary": "#41a1bc",
+      "secondary": "#222222",
+      "accent": "#41a1bc"
+    }
+  },
+  {
+    "name": "Screenshot 2568-01-03 at 18.30.52.png",
+    "color": {
+      "primary": "#f9f9f9",
+      "secondary": "#141310",
+      "accent": "#e09911"
+    }
+  },
+  {
+    "name": "Screenshot 2568-01-03 at 18.32.45.png",
+    "color": {
+      "primary": "#ffffff",
+      "secondary": "#0e375b",
+      "accent": "#2cabce"
+    }
+  }
+]
