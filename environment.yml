@@ -10,3 +10,4 @@ dependencies:
   - pillow
   - scikit-learn
   - opencv
+  - conda-forge::fastapi
