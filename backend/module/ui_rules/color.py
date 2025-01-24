@@ -1,3 +1,4 @@
+import io
 import cv2
 import numpy as np
 from sklearn.cluster import KMeans
@@ -5,27 +6,25 @@ from PIL import Image
 
 
 class ColorModule:
-    def __init__(self, image_path: str, num_colors: int = 3):
+    def __init__(self, image_byte: bytes, num_colors: int = 3):
         """
-        Initialize the ColorModule with the path to the image and the number of dominant colors to extract.
-        :param image_path: Path to the image file.
+        Initialize the ColorModule with the image bytes and the number of dominant colors to extract.
+        :param image_byte: Bytes of the image file.
         :param num_colors: Number of dominant colors to extract (default is 3).
         """
-        self.image_path = image_path
+        if not isinstance(image_byte, (bytes, bytearray)):
+            raise TypeError("image_byte must be a bytes-like object")
+        self.image_byte = image_byte
         self.num_colors = num_colors
+        self.image = self._load_image()
 
-    def _load_image(self, resize_dim=(300, 300)):
+    def _load_image(self):
         """
-        Load the image and resize it for processing.
-        :param resize_dim: Tuple (width, height) to resize the image.
-        :return: A numpy array of the resized image's RGB pixels.
+        Load the image from bytes and convert to RGB.
+        :return: A numpy array of the image's RGB pixels.
         """
-        try:
-            image = Image.open(self.image_path).convert("RGB")
-            resized_image = image.resize(resize_dim)
-            return np.array(resized_image)
-        except Exception as e:
-            raise ValueError(f"Failed to load image: {e}")
+        image = Image.open(io.BytesIO(self.image_byte)).convert("RGB")
+        return np.array(image)
 
     def _remove_background(self, image):
         """
@@ -43,42 +42,29 @@ class ColorModule:
 
     def extract_dominant_colors(self):
         """
-        Extract dominant colors from an image using KMeans clustering.
-
-        Returns:
-            dominant_colors (list): List of dominant colors (RGB tuples) with percentages.
+        Extract the dominant colors from the image.
+        :return: A list of the dominant colors in the image.
         """
-        # Load the image and convert to RGB
-        image = cv2.imread(self.image_path)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-        # Resize the image to reduce noise and processing time
-        resized_image = cv2.resize(image, (100, 100), interpolation=cv2.INTER_AREA)
+        # Convert image bytes to a numpy array
+        image = self.image
 
         # Remove the background from the image
-        image_no_bg = self._remove_background(resized_image)
+        image_no_bg = self._remove_background(image)
 
-        # Flatten the image into an array of pixels
+        # Reshape the image to be a list of pixels
         pixels = image_no_bg.reshape(-1, 3)
 
-        # Remove any fully black pixels (background)
+        # Remove any fully transparent pixels
         pixels = pixels[np.any(pixels != [0, 0, 0], axis=1)]
 
-        # Use KMeans to cluster the pixel colors
+        # Use KMeans to find the dominant colors
         kmeans = KMeans(n_clusters=self.num_colors)
         kmeans.fit(pixels)
 
-        # Get the cluster centers (dominant colors)
-        dominant_colors = kmeans.cluster_centers_.astype(int)
-
-        # Get the percentage of each color
-        labels, counts = np.unique(kmeans.labels_, return_counts=True)
-        percentages = counts / counts.sum() * 100
-
-        # Combine the colors and percentages
-        dominant_colors_with_percentages = [
-            {"color": tuple(color), "percentage": percentage}
-            for color, percentage in zip(dominant_colors, percentages)
+        # Get the RGB values of the cluster centers and their counts
+        colors, counts = np.unique(kmeans.labels_, return_counts=True)
+        dominant_colors = [
+            (kmeans.cluster_centers_[i].astype(int).tolist(), counts[i])
+            for i in range(len(colors))
         ]
-
-        return dominant_colors_with_percentages
+        return dominant_colors

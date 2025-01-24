@@ -2,12 +2,12 @@ from .color import ColorModule
 
 
 class UIRulesModule:
-    def __init__(self, image_path: str):
+    def __init__(self, image_byte: bytes):
         """
         Initialize the UIRulesModule with the image path and color module.
         :param image_path: Path to the image file.
         """
-        self.color_module = ColorModule(image_path)
+        self.color_module = ColorModule(image_byte)
 
     def check_60_30_10_rule(self):
         """
@@ -18,37 +18,42 @@ class UIRulesModule:
         """
         dominant_colors = self.color_module.extract_dominant_colors()
 
-        # Sort colors by percentage (descending)
+        # Convert the list of colors to a list of dictionaries with percentages
+        total_pixels = sum([color[1] for color in dominant_colors])
+        dominant_colors = [
+            {"color": color[0], "percentage": color[1] / total_pixels * 100}
+            for color in dominant_colors
+        ]
+
         dominant_colors = sorted(
             dominant_colors, key=lambda x: x["percentage"], reverse=True
         )
 
-        # Assign roles: Primary (60%), Secondary (30%), Accent (10%)
-        primary = dominant_colors[0]
-        secondary = (
-            dominant_colors[1]
-            if len(dominant_colors) > 1
-            else {"color": None, "percentage": 0}
-        )
-        accent = (
-            dominant_colors[2]
-            if len(dominant_colors) > 2
-            else {"color": None, "percentage": 0}
-        )
+        primary = dominant_colors[0]["color"]
+        secondary = dominant_colors[1]["color"]
+        accent = dominant_colors[2]["color"]
 
-        # Check if the percentages roughly follow the 60-30-10 rule
-        primary_ok = 50 <= primary["percentage"] <= 70
-        secondary_ok = 20 <= secondary["percentage"] <= 40
-        accent_ok = 5 <= accent["percentage"] <= 15
+        primary_ok = dominant_colors[0]["percentage"] >= 60
+        secondary_ok = dominant_colors[1]["percentage"] >= 30
+        accent_ok = dominant_colors[2]["percentage"] >= 10
 
         return {
-            "primary_color": primary,
-            "secondary_color": secondary,
-            "accent_color": accent,
-            "rule_followed": primary_ok and secondary_ok and accent_ok,
+            "primary_color": {
+                "color": primary,
+                "percentage": dominant_colors[0]["percentage"],
+            },
+            "secondary_color": {
+                "color": secondary,
+                "percentage": dominant_colors[1]["percentage"],
+            },
+            "accent_color": {
+                "color": accent,
+                "percentage": dominant_colors[2]["percentage"],
+            },
+            "rule_followed": bool(primary_ok and secondary_ok and accent_ok),
             "details": {
-                "primary_ok": primary_ok,
-                "secondary_ok": secondary_ok,
-                "accent_ok": accent_ok,
+                "primary_ok": bool(primary_ok),
+                "secondary_ok": bool(secondary_ok),
+                "accent_ok": bool(accent_ok),
             },
         }

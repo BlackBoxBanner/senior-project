@@ -1,6 +1,7 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File
 from fastapi.responses import JSONResponse
-
+from typing import Annotated
+from module.ui_rules import ui_rules
 
 app = FastAPI()
 
@@ -10,10 +11,8 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/603010")
-async def upload_image(file: UploadFile = File(...)):
-    contents = await file.read()
-    # You can save the file or process it here
-    return JSONResponse(
-        content={"filename": file.filename, "content_type": file.content_type}
-    )
+@app.post("/603010")
+async def upload_image(image: Annotated[bytes, File()]):
+    ui = ui_rules.UIRulesModule(image)
+    result = ui.check_60_30_10_rule()
+    return JSONResponse(content=result)

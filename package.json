@@ -1,0 +1,13 @@
+{
+  "scripts": {
+    "install:backend": "conda env create -f environment.yml",
+    "install:frontend": "(cd frontend && pnpm install && cd -)",
+    "install:all": "pnpm install && pnpm run install:backend && pnpm run install:frontend",
+    "dev:backend": "(cd backend && uvicorn app:app --reload && cd -)",
+    "dev:frontend": "(cd frontend && pnpm dev && cd -)",
+    "dev": "concurrently -n backend,frontend -c green,blue \"pnpm run dev:backend\" \"pnpm run dev:frontend\""
+  },
+  "dependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
