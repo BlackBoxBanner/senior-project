@@ -9,7 +9,7 @@ class UIRulesModule:
         """
         self.color_module = ColorModule(image_byte)
 
-    def check_60_30_10_rule(self):
+    def check_60_30_10_rule(self, acceptable_range=5):
         """
         Check if the extracted dominant colors follow the 60-30-10 UI rule.
 
@@ -33,9 +33,21 @@ class UIRulesModule:
         secondary = dominant_colors[1]["color"]
         accent = dominant_colors[2]["color"]
 
-        primary_ok = dominant_colors[0]["percentage"] >= 60
-        secondary_ok = dominant_colors[1]["percentage"] >= 30
-        accent_ok = dominant_colors[2]["percentage"] >= 10
+        primary_ok = (
+            60 - acceptable_range
+            <= dominant_colors[0]["percentage"]
+            <= 60 + acceptable_range
+        )
+        secondary_ok = (
+            30 - acceptable_range
+            <= dominant_colors[1]["percentage"]
+            <= 30 + acceptable_range
+        )
+        accent_ok = (
+            10 - acceptable_range
+            <= dominant_colors[2]["percentage"]
+            <= 10 + acceptable_range
+        )
 
         return {
             "primary_color": {
