@@ -11,3 +11,5 @@ dependencies:
   - scikit-learn
   - opencv
   - conda-forge::fastapi
+  - conda-forge::tensorflow
+  - conda-forge::keras
