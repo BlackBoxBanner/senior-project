@@ -3,72 +3,68 @@
 # Exit on error
 set -e
 
-# Function to check if conda is installed
-check_conda_installed() {
-    if command -v conda >/dev/null 2>&1; then
-        echo "✅ Conda is already installed."
-    else
-        echo "🚫 Conda not found. Installing Miniconda..."
-        install_miniconda
-    fi
-}
+# Directory for the virtual environment
+VENV_DIR=".venv"
 
-# Function to install Miniconda
-install_miniconda() {
-    OS_TYPE=$(uname)
-    if [ "$OS_TYPE" == "Linux" ]; then
-        MINICONDA_SCRIPT="Miniconda3-latest-Linux-x86_64.sh"
-    elif [ "$OS_TYPE" == "Darwin" ]; then
-        MINICONDA_SCRIPT="Miniconda3-latest-MacOSX-x86_64.sh"
-    else
-        echo "Unsupported OS: $OS_TYPE"
+# Which Python executable to use
+PYTHON_BIN="python3.10"
+
+# Function to check that python3.10 and venv support are available
+check_python_venv() {
+    if ! command -v $PYTHON_BIN >/dev/null 2>&1; then
+        echo "🚫 $PYTHON_BIN not found. Please install Python 3.10."
+        echo "   On Debian/Ubuntu: sudo apt-get install python3.10 python3.10-venv"
+        echo "   On macOS (Homebrew): brew install python@3.10"
         exit 1
     fi
 
-    wget https://repo.anaconda.com/miniconda/$MINICONDA_SCRIPT -O miniconda.sh
-    bash miniconda.sh -b -p $HOME/miniconda
-    rm miniconda.sh
-    export PATH="$HOME/miniconda/bin:$PATH"
-    echo 'export PATH="$HOME/miniconda/bin:$PATH"' >> ~/.bashrc
-    source ~/.bashrc
-    echo "✅ Miniconda installed."
+    # Check that venv module is available in python3.10
+    if ! $PYTHON_BIN - <<<'import venv' 2>/dev/null; then
+        echo "🚫 The venv module is not available in $PYTHON_BIN."
+        echo "   On Debian/Ubuntu: sudo apt-get install python3.10-venv"
+        exit 1
+    fi
+
+    echo "✅ $PYTHON_BIN with venv support detected."
 }
 
-# Function to install Python requirements
+# Function to create (or recreate) the .venv
+create_or_recreate_venv() {
+    if [ -d "$VENV_DIR" ]; then
+        echo "🔁 Removing existing virtualenv at '$VENV_DIR'"
+        rm -rf "$VENV_DIR"
+    fi
+
+    echo "🐍 Creating new virtualenv with $PYTHON_BIN in '$VENV_DIR'"
+    $PYTHON_BIN -m venv "$VENV_DIR"
+    echo "✅ Virtualenv created."
+}
+
+# Function to activate venv and install requirements
 install_requirements() {
-    ENV_NAME="senior-project-ui-evluation"
+    # Activate the venv
+    # shellcheck disable=SC1091
+    source "$VENV_DIR/bin/activate"
 
-    echo "🔍 Checking if conda environment '$ENV_NAME' exists..."
-    if conda info --envs | grep -q "^$ENV_NAME[[:space:]]"; then
-        echo "🔁 Switching to 'base' environment before removal..."
-        source "$(conda info --base)/etc/profile.d/conda.sh"
-        conda activate base
+    echo "📦 Upgrading pip in the virtualenv..."
+    pip install --upgrade pip
 
-        echo "🗑️ Removing existing environment: $ENV_NAME"
-        conda remove --name $ENV_NAME --all -y
-    fi
-
-    echo "🐍 Creating new conda environment: $ENV_NAME"
-    conda create -y -n $ENV_NAME python=3.10
-
-    echo "✅ Environment '$ENV_NAME' created."
-
-    echo "📦 Installing Python requirements into '$ENV_NAME'..."
     if [ -f "requirements.txt" ]; then
-        # Activate env in subshell to keep it clean
-        echo "🔁 Switching to '$ENV_NAME' environment before activation..."
-        source "$(conda info --base)/etc/profile.d/conda.sh"
-        conda activate $ENV_NAME
-
-        conda install --yes --file requirements.txt || pip install -r requirements.txt
-        echo "✅ Requirements installed in '$ENV_NAME'"
+        echo "📥 Installing requirements from requirements.txt..."
+        pip install -r requirements.txt
+        echo "✅ Requirements installed."
     else
-        echo "⚠️  No requirements.txt found. Skipping requirements installation."
+        echo "⚠️  No requirements.txt found. Skipping installation."
     fi
+
+    # Deactivate after install
+    deactivate
 }
 
-# Start installation process
-check_conda_installed
+# Main
+check_python_venv
+create_or_recreate_venv
 install_requirements
 
-echo "🎉 Installation complete!"
+echo "🎉 Installation complete! To start using the environment, run:"
+echo "    source $VENV_DIR/bin/activate"
