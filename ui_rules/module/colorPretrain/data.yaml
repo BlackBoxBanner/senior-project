@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 22
+names: ['Logo', 'Navigation', 'button', 'checkbox', 'content', 'control-bar', 'field', 'footer', 'input', 'logo', 'menu-bar', 'menu-panel', 'navigation', 'progress bar', 'radio', 'search', 'select', 'side-panel', 'slider', 'tab-bar', 'toggle', 'video']
+
+roboflow:
+  workspace: joe-jwss4
+  project: button-trx1o
+  version: 3
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/joe-jwss4/button-trx1o/dataset/3
