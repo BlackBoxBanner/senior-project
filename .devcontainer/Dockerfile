@@ -12,6 +12,7 @@ RUN apt-get update && \
       zlib1g-dev \
       libglib2.0-0 \
       libncurses5-dev \
+      liblzma-dev \
       libgdbm-dev \
       libnss3-dev \
       libssl-dev \
