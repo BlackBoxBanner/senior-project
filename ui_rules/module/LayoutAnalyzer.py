@@ -132,29 +132,29 @@ class LayoutAnalyzer:
             self._spacing_stats(self.get_row_positions())
         )
 
-    def report_grid_alignment(self, tol_x: float = 10.0, tol_y: float = 10.0) -> None:
-        row_pos = self.get_row_positions(tol_y)
-        col_pos = self.get_column_positions(tol_x)
+def report_grid_alignment(analyzer: LayoutAnalyzer, tol_x: float = 10.0, tol_y: float = 10.0) -> None:
+    row_pos = analyzer.get_row_positions(tol_y)
+    col_pos = analyzer.get_column_positions(tol_x)
 
-        print("\n🧭 Grid Line Positions:")
-        print(f"  Horizontal Rows (Y): {['%.1f' % y for y in row_pos]}")
-        print(f"  Vertical Columns (X): {['%.1f' % x for x in col_pos]}")
+    print("\n🧭 Grid Line Positions:")
+    print(f"  Horizontal Rows (Y): {['%.1f' % y for y in row_pos]}")
+    print(f"  Vertical Columns (X): {['%.1f' % x for x in col_pos]}")
 
-        print("\n📏 Row Alignment Details:")
-        for i, y in enumerate(row_pos):
-            row_dets = [det for det in self.detections if abs(det.center[1] - y) <= tol_y]
-            aligned = all(abs(det.center[1] - y) <= tol_y for det in row_dets)
-            print(f"  Row {i} (Y={y:.1f}) - {len(row_dets)} item(s) - {'Aligned' if aligned else '⚠️ Misaligned'}")
-            if row_dets:
-                print("    " + ", ".join(f"{det.class_label}#{det.detection_id[:6]}" for det in row_dets))
+    print("\n📏 Row Alignment Details:")
+    for i, y in enumerate(row_pos):
+        row_dets = [det for det in analyzer.detections if abs(det.center[1] - y) <= tol_y]
+        aligned = all(abs(det.center[1] - y) <= tol_y for det in row_dets)
+        print(f"  Row {i} (Y={y:.1f}) - {len(row_dets)} item(s) - {'Aligned' if aligned else '⚠️ Misaligned'}")
+        if row_dets:
+            print("    " + ", ".join(f"{det.class_label}#{det.detection_id[:6]}" for det in row_dets))
 
-        print("\n🖐️ Column Alignment Details:")
-        for j, x in enumerate(col_pos):
-            col_dets = [det for det in self.detections if abs(det.center[0] - x) <= tol_x]
-            aligned = all(abs(det.center[0] - x) <= tol_x for det in col_dets)
-            print(f"  Col {j} (X={x:.1f}) - {len(col_dets)} item(s) - {'Aligned' if aligned else '⚠️ Misaligned'}")
-            if col_dets:
-                print("    " + ", ".join(f"{det.class_label}#{det.detection_id[:6]}" for det in col_dets))
+    print("\n🖐️ Column Alignment Details:")
+    for j, x in enumerate(col_pos):
+        col_dets = [det for det in analyzer.detections if abs(det.center[0] - x) <= tol_x]
+        aligned = all(abs(det.center[0] - x) <= tol_x for det in col_dets)
+        print(f"  Col {j} (X={x:.1f}) - {len(col_dets)} item(s) - {'Aligned' if aligned else '⚠️ Misaligned'}")
+        if col_dets:
+            print("    " + ", ".join(f"{det.class_label}#{det.detection_id[:6]}" for det in col_dets))
 
 
 if __name__ == "__main__":
@@ -168,7 +168,7 @@ if __name__ == "__main__":
     print("Horizontally aligned:", analyzer_single.check_alignment("horizontal", tol=10))
     print("Vertically aligned:", analyzer_single.check_alignment("vertical", tol=10))
     print("Spacing (h, v):", analyzer_single.get_spacing_statistics())
-    analyzer_single.report_grid_alignment(tol_x=20, tol_y=20)
+    report_grid_alignment(analyzer_single, tol_x=20, tol_y=20)
 
     print("\n== Version: Multi Assignment with Overlap ==")
     analyzer_multi = LayoutAnalyzer(sample_json)
@@ -177,4 +177,4 @@ if __name__ == "__main__":
     print("Horizontally aligned:", analyzer_multi.check_alignment("horizontal", tol=10))
     print("Vertically aligned:", analyzer_multi.check_alignment("vertical", tol=10))
     print("Spacing (h, v):", analyzer_multi.get_spacing_statistics())
-    analyzer_multi.report_grid_alignment(tol_x=20, tol_y=20)
+    report_grid_alignment(analyzer_multi, tol_x=20, tol_y=20)

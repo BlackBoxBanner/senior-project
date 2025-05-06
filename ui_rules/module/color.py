@@ -1,150 +1,123 @@
-import cv2
-import numpy as np
-from sklearn.cluster import KMeans
-from PIL import Image
-from numpy.typing import NDArray
-import matplotlib.pyplot as plt
+from __future__ import annotations
 import base64
 from io import BytesIO
+from typing import Any, Tuple, List
+
+import cv2
+import numpy as np
+from numpy.typing import NDArray
+from PIL import Image
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
 
 
 class ColorModule:
-    def load_image(self, path: str) -> NDArray:
-        """
-        Load an image from a file and convert it to a numpy array with RGB format.
-        """
-        img = Image.open(path).convert("RGB")
-        return np.array(img)
+    @staticmethod
+    def load_image(path: str) -> NDArray[np.uint8]:
+        """Load an image from a file path as an RGB numpy array."""
+        with Image.open(path) as img:
+            return np.array(img.convert("RGB"))
 
-    def load_base64_image(self, base64_str: str) -> NDArray:
-        """
-        Load an image from a base64 string and convert it to a numpy array with RGB format.
-        """
-        img = base64.b64decode(base64_str)
-        img = BytesIO(img)
-        img = Image.open(img).convert("RGB")
-        return np.array(img)
+    @staticmethod
+    def load_base64_image(base64_str: str) -> NDArray[np.uint8]:
+        """Decode base64 string into an RGB image array."""
+        decoded = base64.b64decode(base64_str)
+        with Image.open(BytesIO(decoded)) as img:
+            return np.array(img.convert("RGB"))
 
-    def resize_image(self, img: NDArray, size: tuple[int, int]) -> NDArray:
-        """
-        Resize an image to the specified size.
-        """
-        return cv2.resize(img, size)
+    @staticmethod
+    def resize_image(image: NDArray[np.uint8], size: Tuple[int, int]) -> NDArray[Any]:
+        """Resize image using OpenCV."""
+        return cv2.resize(image, size)
 
-    def remove_background(self, image: NDArray) -> NDArray:
-        """
-        Remove background by thresholding on grayscale image.
-        """
+    @staticmethod
+    def remove_background(image: NDArray[np.uint8]) -> NDArray[Any]:
+        """Remove background using binary thresholding on grayscale."""
         gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
         _, mask = cv2.threshold(gray, 1, 255, cv2.THRESH_BINARY)
         return cv2.bitwise_and(image, image, mask=mask)
 
+    @staticmethod
     def extract_dominant_colors(
-        self, image: NDArray, color_number: int = 3
-    ) -> list[tuple[list[int], int]]:
-        """
-        Extract the most dominant colors (ignoring black pixels).
-        Returns:
-            A list of tuples: (RGB color as list[int], pixel count as int)
-        """
+        image: NDArray[np.uint8], color_number: int = 3
+    ) -> List[Tuple[List[int], int]]:
+        """Extract dominant non-black RGB colors with their pixel counts."""
         pixels = image.reshape(-1, 3)
         pixels = pixels[np.any(pixels != [0, 0, 0], axis=1)]
 
-        if len(pixels) == 0:
-            raise ValueError("No non-black pixels found in the image.")
+        if pixels.size == 0:
+            raise ValueError("No non-black pixels found.")
 
         kmeans = KMeans(n_clusters=color_number, n_init="auto", random_state=42)
         kmeans.fit(pixels)
 
-        colors, counts = np.unique(kmeans.labels_, return_counts=True)
-
-        dominant_colors: list[tuple[list[int], int]] = [
-            (kmeans.cluster_centers_[i].astype(int).tolist(), int(counts[i]))
-            for i in range(len(colors))
+        labels, counts = np.unique(kmeans.labels_, return_counts=True)
+        return [
+            (kmeans.cluster_centers_[label].astype(int).tolist(), int(count))
+            for label, count in zip(labels, counts)
         ]
-        return dominant_colors
 
-    def check_percent(
-        self, colors: list[tuple[list[int], int]]
-    ) -> list[tuple[list[int], int]]:
-        """
-        Convert raw pixel counts to percentages and sort by percentage descending.
-        """
+    @staticmethod
+    def calculate_percentages(
+        colors: List[Tuple[List[int], int]]
+    ) -> List[Tuple[List[int], int]]:
+        """Convert counts to percentage and sort descending."""
         total = sum(count for _, count in colors)
-        if total == 0:
-            sorted_colors = [(color, 0) for color, _ in colors]
-        else:
-            sorted_colors = [
-                (color, round((count / total) * 100)) for color, count in colors
-            ]
+        percentages = [
+            (color, round((count / total) * 100)) if total > 0 else (color, 0)
+            for color, count in colors
+        ]
+        return sorted(percentages, key=lambda x: x[1], reverse=True)
 
-        sorted_colors.sort(key=lambda x: x[1], reverse=True)
-        return sorted_colors
-
-    def plot_colors(self, colors: list[tuple[list[int], int]]) -> None:
-        """
-        Plot the dominant colors as a horizontal bar.
-        """
+    @staticmethod
+    def plot_colors(colors: List[Tuple[List[int], int]]) -> None:
+        """Visualize dominant colors as a horizontal bar chart."""
         if not colors:
             print("No colors to plot.")
             return
 
-        color_patches = [np.array(color) / 255 for color, _ in colors]
-        percentages = [percent for _, percent in colors]
-
         fig, ax = plt.subplots(figsize=(8, 2))
         start = 0
-
-        for color, percent in zip(color_patches, percentages):
+        for rgb, percent in colors:
+            color = np.array(rgb) / 255
             ax.barh(0, width=percent, left=start, color=color, edgecolor="black")
             start += percent
 
         ax.set_xlim(0, 100)
         ax.axis("off")
+        plt.tight_layout()
         plt.show()
 
-    def save_colors(self, colors: list[tuple[list[int], int]], filepath: str) -> None:
-        """
-        Save the dominant colors and their percentages to a text file.
-        """
+    @staticmethod
+    def save_colors(colors: List[Tuple[List[int], int]], filepath: str) -> None:
+        """Save RGB and percentage values to a text file."""
         with open(filepath, "w") as f:
             for color, percent in colors:
                 f.write(f"Color RGB{tuple(color)} - {percent}%\n")
 
-    def hex_from_rgb(self, rgb: list[int]) -> str:
-        """
-        Convert an RGB list to a hex string.
-        """
+    @staticmethod
+    def hex_from_rgb(rgb: List[int]) -> str:
+        """Convert RGB list to hex string."""
         return "#{:02x}{:02x}{:02x}".format(*rgb)
 
-    def hex_colors(self, colors: list[tuple[list[int], int]]) -> list[tuple[str, int]]:
-        """
-        Return a list of (hex_color, percentage) from (rgb_color, percentage).
-        """
+    def hex_colors(self, colors: List[Tuple[List[int], int]]) -> List[Tuple[str, int]]:
+        """Convert list of RGB colors to HEX with percentages."""
         return [(self.hex_from_rgb(color), percent) for color, percent in colors]
 
-    def srgb_to_linear(self, component: float):
-        """Convert an sRGB component (0-255) to linear space."""
-        component = component / 255.0
-        if component <= 0.03928:
-            return component / 12.92
-        else:
-            return ((component + 0.055) / 1.055) ** 2.4
+    @staticmethod
+    def srgb_to_linear(component: float) -> float:
+        """Convert an sRGB component to linear light."""
+        c = component / 255.0
+        return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
 
-    def relative_luminance(self, r: int, g: int, b: int):
-        """Calculate the relative luminance of an sRGB color."""
-        R = self.srgb_to_linear(r)
-        G = self.srgb_to_linear(g)
-        B = self.srgb_to_linear(b)
+    def relative_luminance(self, r: int, g: int, b: int) -> float:
+        """Calculate relative luminance of an sRGB color."""
+        R, G, B = map(self.srgb_to_linear, [r, g, b])
         return 0.2126 * R + 0.7152 * G + 0.0722 * B
 
-    def contrast_ratio(self, color1: list[int], color2: list[int]):
-        """
-        Calculate contrast ratio between two colors.
-        Each color is a tuple of (R, G, B) in 8-bit sRGB.
-        """
+    def contrast_ratio(self, color1: List[int], color2: List[int]) -> float:
+        """Calculate contrast ratio between two RGB colors."""
         L1 = self.relative_luminance(*color1)
         L2 = self.relative_luminance(*color2)
-        lighter = max(L1, L2)
-        darker = min(L1, L2)
+        lighter, darker = max(L1, L2), min(L1, L2)
         return round((lighter + 0.05) / (darker + 0.05), 2)

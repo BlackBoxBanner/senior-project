@@ -13,6 +13,10 @@ RUN apt-get update && \
       libglib2.0-0 \
       libncurses5-dev \
       liblzma-dev \
+      sqlite3 \
+      libsqlite3-dev \
+      libsqlite3-dev \
+      # python3-sqlite \
       libgdbm-dev \
       libnss3-dev \
       libssl-dev \

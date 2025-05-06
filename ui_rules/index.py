@@ -6,7 +6,7 @@ img_resized = cm.resize_image(img, (300, 300))
 img_no_bg = cm.remove_background(img_resized)
 
 dominant = cm.extract_dominant_colors(img_no_bg, color_number=3)
-dominant_percent = cm.check_percent(dominant)
+dominant_percent = cm.calculate_percentages(dominant)
 
 contrast = cm.contrast_ratio(dominant_percent[0][0], dominant_percent[1][0])
 
