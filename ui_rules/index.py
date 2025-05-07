@@ -11,7 +11,7 @@ def image_to_base64(image_path: str) -> str:
         return base64.b64encode(img_file.read()).decode("utf-8")
         
 # === Example Usage ===
-image_path = "sample/sample_2.png"
+image_path = "sample/sample_4.png"
 base64_str = image_to_base64(image_path)
 
 # Run detection and analysis

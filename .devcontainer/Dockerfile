@@ -15,8 +15,6 @@ RUN apt-get update && \
       liblzma-dev \
       sqlite3 \
       libsqlite3-dev \
-      libsqlite3-dev \
-      # python3-sqlite \
       libgdbm-dev \
       libnss3-dev \
       libssl-dev \

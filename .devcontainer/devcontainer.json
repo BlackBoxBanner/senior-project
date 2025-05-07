@@ -1,5 +1,7 @@
 {
 	"name": "Senior Project",
+	// "dockerComposeFile": "../docker-compose.yml",
+	// "shutdownAction": "stopCompose",
 	"build": {
 		"dockerfile": "Dockerfile"
 	},
