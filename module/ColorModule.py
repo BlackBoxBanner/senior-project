@@ -20,7 +20,7 @@ HexColorPercentage = Tuple[str, int]
 
 
 class ColorModule:
-    def __init__(self, base64_str: str, resize_to: Tuple[int, int] = (300, 300),detections:List[Detection]=[]) -> None:
+    def __init__(self, base64_str: str, resize_to: Tuple[int, int] = (600, 600),detections:List[Detection]=[]) -> None:
         """Initialize and process base64 image."""
         self.detections: List[Detection] = detections
         self.original_image: NDArray[np.uint8] = self._load_base64_image(base64_str)
