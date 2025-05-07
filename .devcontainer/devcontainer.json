@@ -3,7 +3,7 @@
 	"build": {
 		"dockerfile": "Dockerfile"
 	},
-	"postCreateCommand": "pip install --upgrade pip && pip install -r requirements.txt",
+	"postCreateCommand": "pip install --upgrade pip && pip install -r requirements.txt && echo 'export PYTHONPATH=\"/workspace:$PYTHONPATH\"' >> ~/.bashrc",
 	"customizations": {
 		"vscode": {
 			"extensions": [
