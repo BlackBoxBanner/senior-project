@@ -9,12 +9,21 @@ from module.Detection import Detection
 
 
 class AxisEnum(str, Enum):
+    """
+    Enumeration for axis directions used in layout analysis.
+    """
     HORIZONTAL = "horizontal"
     VERTICAL = "vertical"
 
 
 class LayoutAnalyzer:
+    """
+    Analyzes layout alignment of UI components based on detection bounding boxes.
+    """
     def __init__(self, predictions_json: str, tol_x: float = 10.0, tol_y: float = 10.0):
+        """
+        Initialize with detection predictions in JSON and tolerance values for alignment.
+        """
         data = json.loads(predictions_json)
         self.detections: List[Detection] = [
             Detection(
@@ -28,6 +37,9 @@ class LayoutAnalyzer:
         self.tol_y = tol_y
 
     def _cluster_1d(self, values: List[float], tol: float, min_cluster_size: int = 2) -> List[float]:
+        """
+        Clusters 1D values using simple distance-based grouping.
+        """
         if not values:
             return []
         sorted_vals = sorted(values)
@@ -41,16 +53,28 @@ class LayoutAnalyzer:
 
     @cached_property
     def row_positions(self) -> List[float]:
+        """
+        Cached cluster positions for rows (Y-axis).
+        """
         return self._cluster_1d([c[1] for c in self.centers], tol=self.tol_y)
 
     @cached_property
     def column_positions(self) -> List[float]:
+        """
+        Cached cluster positions for columns (X-axis).
+        """
         return self._cluster_1d([c[0] for c in self.centers], tol=self.tol_x)
 
     def get_row_positions(self, tol: float | None = None) -> List[float]:
+        """
+        Return row (Y) cluster positions based on tolerance.
+        """
         return self._cluster_1d([c[1] for c in self.centers], tol or self.tol_y)
 
     def get_column_positions(self, tol: float | None = None) -> List[float]:
+        """
+        Return column (X) cluster positions based on tolerance.
+        """
         return self._cluster_1d([c[0] for c in self.centers], tol or self.tol_x)
 
     def generate_grid_with_skipped(
@@ -61,6 +85,10 @@ class LayoutAnalyzer:
         allow_multi_assign: bool = False,
         allow_overlaps: bool = True
     ) -> Tuple[List[List[List[Detection]]], List[Detection]]:
+        """
+        Assign detections to a 2D grid based on proximity to clustered X/Y positions.
+        Returns the grid and a list of detections that didn't match any cell.
+        """
         tol_x = tol_x or self.tol_x
         tol_y = tol_y or self.tol_y
 
@@ -100,6 +128,9 @@ class LayoutAnalyzer:
     def get_misaligned_and_skipped(
         self, axis: AxisEnum = AxisEnum.HORIZONTAL, tol: float | None = None
     ) -> Tuple[List[Detection], List[Detection]]:
+        """
+        Returns detections that are either misaligned or completely skipped (not aligned to any row/column).
+        """
         tol = tol or (self.tol_y if axis == AxisEnum.HORIZONTAL else self.tol_x)
         axis_index = 1 if axis == AxisEnum.HORIZONTAL else 0
         positions = self._cluster_1d([c[axis_index] for c in self.centers], tol=tol)
@@ -117,6 +148,9 @@ class LayoutAnalyzer:
         return misaligned, skipped
 
     def calculate_misalignment_percentage(self, axis: AxisEnum = AxisEnum.HORIZONTAL, tol: float | None = None) -> float:
+        """
+        Calculate the percentage of detections that are either skipped or misaligned.
+        """
         tol = tol or (self.tol_y if axis == AxisEnum.HORIZONTAL else self.tol_x)
         total = len(self.detections)
         if total == 0:
@@ -126,9 +160,15 @@ class LayoutAnalyzer:
         return round((total_bad / total) * 100, 2)
 
     def _spacing_stats(self, positions: List[float]) -> float:
+        """
+        Compute average spacing between sorted cluster positions.
+        """
         return statistics.mean([j - i for i, j in zip(positions, positions[1:])]) if len(positions) > 1 else 0.0
 
     def get_spacing_statistics(self) -> Tuple[float, float]:
+        """
+        Get average spacing for columns and rows respectively.
+        """
         return (
             self._spacing_stats(self.get_column_positions()),
             self._spacing_stats(self.get_row_positions())
@@ -136,6 +176,9 @@ class LayoutAnalyzer:
 
 
 def report_alignment_details(analyzer: LayoutAnalyzer, axis: AxisEnum = AxisEnum.HORIZONTAL, tol: float | None = None) -> None:
+    """
+    Print details about misaligned and skipped detections along the given axis.
+    """
     misaligned, skipped = analyzer.get_misaligned_and_skipped(axis, tol)
 
     axis_label = "Y" if axis == AxisEnum.HORIZONTAL else "X"
@@ -147,6 +190,7 @@ def report_alignment_details(analyzer: LayoutAnalyzer, axis: AxisEnum = AxisEnum
     print(f"  Skipped (No Match): {len(skipped)}")
     for det in skipped:
         print(f"    - {det.class_label}#{det.detection_id[:6]} center={det.center}")
+
 
 if __name__ == "__main__":
     import os
@@ -176,10 +220,6 @@ if __name__ == "__main__":
 
     print(f"\n🧩 Grid Summary: {row_count} rows x {col_count} columns")
     print(f"  Skipped in Grid: {len(skipped)}")
-
-    # Report alignment details
-    # report_alignment_details(analyzer, axis=AxisEnum.HORIZONTAL)
-    # report_alignment_details(analyzer, axis=AxisEnum.VERTICAL)
 
     # Calculate misalignment percentages
     h_score = analyzer.calculate_misalignment_percentage(AxisEnum.HORIZONTAL)

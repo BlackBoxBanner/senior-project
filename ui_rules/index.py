@@ -23,7 +23,7 @@ la = LayoutAnalyzer(detected_json, tol_x=20, tol_y=20)
 
 # Generate grid and collect skipped detections
 image_grid, skipped_detections = la.generate_grid_with_skipped(
-    tol_x=20, tol_y=20, allow_multi_assign=True, debug=False
+    tol_x=20, tol_y=20, allow_multi_assign=True, debug=False, allow_overlaps=True
 )
 
 row_count = len(image_grid)
