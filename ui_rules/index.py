@@ -15,7 +15,7 @@ image_path = "sample/sample_4.png"
 base64_str = image_to_base64(image_path)
 
 # Run detection and analysis
-ui_detector = UIComponentDetector(confidence_threshold=0, iou_threshold=0)
+ui_detector = UIComponentDetector()
 detected_ui = ui_detector.detect_from_base64(base64_str)
 
 cm = ColorModule(base64_str, detections=detected_ui)
