@@ -15,11 +15,11 @@ image_path = "sample/sample_4.png"
 base64_str = image_to_base64(image_path)
 
 # Run detection and analysis
-ui_detector = UIComponentDetector()
-detected_json = ui_detector.detect_base64_as_json(base64_str)
+ui_detector = UIComponentDetector(confidence_threshold=0, iou_threshold=0)
+detected_ui = ui_detector.detect_from_base64(base64_str)
 
-cm = ColorModule(base64_str, predictions_json=detected_json)
-la = LayoutAnalyzer(detected_json, tol_x=20, tol_y=20)
+cm = ColorModule(base64_str, detections=detected_ui)
+la = LayoutAnalyzer(detected_ui, tol_x=20, tol_y=20)
 
 # Generate grid and collect skipped detections
 image_grid, skipped_detections = la.generate_grid_with_skipped(

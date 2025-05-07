@@ -12,9 +12,6 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 from module.Detection import Detection
 
-
-import json
-
 # === Type Aliases ===
 RGBColor = List[int]
 ColorCount = Tuple[RGBColor, int]
@@ -23,16 +20,9 @@ HexColorPercentage = Tuple[str, int]
 
 
 class ColorModule:
-    def __init__(self, base64_str: str, resize_to: Tuple[int, int] = (300, 300),predictions_json:str='{"predictions":[]}') -> None:
+    def __init__(self, base64_str: str, resize_to: Tuple[int, int] = (300, 300),detections:List[Detection]=[]) -> None:
         """Initialize and process base64 image."""
-        data = json.loads(predictions_json)
-        self.detections: List[Detection] = [
-            Detection(
-                x=p['x'], y=p['y'], width=p['width'], height=p['height'],
-                confidence=p['confidence'], class_label=p['class'],
-                class_id=p['class_id'], detection_id=p['detection_id']
-            ) for p in data.get("predictions", [])
-        ]
+        self.detections: List[Detection] = detections
         self.original_image: NDArray[np.uint8] = self._load_base64_image(base64_str)
         self.image: NDArray[np.uint8] = self._preprocess_image(self.original_image, resize_to)
 

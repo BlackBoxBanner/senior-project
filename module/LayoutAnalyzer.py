@@ -20,18 +20,11 @@ class LayoutAnalyzer:
     """
     Analyzes layout alignment of UI components based on detection bounding boxes.
     """
-    def __init__(self, predictions_json: str, tol_x: float = 10.0, tol_y: float = 10.0):
+    def __init__(self, detections: List[Detection], tol_x: float = 10.0, tol_y: float = 10.0):
         """
         Initialize with detection predictions in JSON and tolerance values for alignment.
         """
-        data = json.loads(predictions_json)
-        self.detections: List[Detection] = [
-            Detection(
-                x=p['x'], y=p['y'], width=p['width'], height=p['height'],
-                confidence=p['confidence'], class_label=p['class'],
-                class_id=p['class_id'], detection_id=p['detection_id']
-            ) for p in data.get("predictions", [])
-        ]
+        self.detections: List[Detection] = detections
         self.centers = [det.center for det in self.detections]
         self.tol_x = tol_x
         self.tol_y = tol_y
@@ -202,9 +195,16 @@ if __name__ == "__main__":
 
     with open(sample_path, "r") as f:
         detected_json = f.read()
+        data = json.loads(detected_json)
 
     # Initialize LayoutAnalyzer with tolerances
-    analyzer = LayoutAnalyzer(detected_json, tol_x=20, tol_y=20)
+    analyzer = LayoutAnalyzer([
+            Detection(
+                x=p['x'], y=p['y'], width=p['width'], height=p['height'],
+                confidence=p['confidence'], class_label=p['class'],
+                class_id=p['class_id'], detection_id=p['detection_id']
+            ) for p in data.get("predictions", [])
+        ], tol_x=20, tol_y=20)
 
     # Generate grid and collect skipped detections
     grid, skipped = analyzer.generate_grid_with_skipped(
