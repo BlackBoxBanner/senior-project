@@ -1,6 +1,4 @@
 import base64
-from typing import Tuple
-
 from module.ColorModule import ColorModule
 from module.UIComponentDetector import UIComponentDetector
 from module.LayoutAnalyzer import LayoutAnalyzer, AxisEnum
