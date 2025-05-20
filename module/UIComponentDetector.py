@@ -34,6 +34,8 @@ class UIComponentDetector:
             conf=self.confidence_threshold, 
             iou=self.iou_threshold
         )[0]
+        
+        print(results)
 
         predictions:List[Detection] = []
         for box in results.boxes:

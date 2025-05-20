@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 14
+names: ['Button', 'CheckBox', 'CheckedTextView', 'EditText', 'EditText-', 'ImageButton', 'ImageView', 'ProgressBar', 'RadioButton', 'RatingBar', 'SeekBar', 'Spinner', 'Switch', 'TextView']
+
+roboflow:
+  workspace: svacmai-0e0tl
+  project: ui-component-nkmty
+  version: 2
+  license: MIT
+  url: https://universe.roboflow.com/svacmai-0e0tl/ui-component-nkmty/dataset/2
